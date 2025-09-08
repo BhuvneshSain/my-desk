@@ -6,7 +6,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-dashboard-master
+# Ignore the template/demo assets folder
+dashboard-master/
 node_modules
 dist
 dist-ssr
