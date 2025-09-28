@@ -105,100 +105,100 @@ export default function OutwardRegister() {
 
   return (
     <div className="space-y-6">
-      <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-card">
+      <div className="p-6 bg-card rounded-xl border-2 border-border/40 shadow-retro">
         <h1 className="text-2xl font-semibold mb-1">Outward Register</h1>
-        <p className="text-gray-500">Record outgoing files and attachments</p>
+        <p className="text-muted-foreground">Record outgoing files and attachments</p>
 
         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">File No</label>
-            <input value={fileNo} onChange={(e)=>setFileNo(e.target.value)} className={`w-full px-3 py-2 rounded-md border focus:outline-none focus:ring-2 bg-white text-gray-900 transition ${errors.fileNo ? 'border-red-500 focus:ring-red-500' : fileNo ? 'border-emerald-400 focus:ring-emerald-500' : 'border-gray-300 focus:ring-brand'}`} placeholder="e.g. 456/GA/2025" />
+            <label className="block text-sm text-muted-foreground mb-1">File No</label>
+            <input value={fileNo} onChange={(e)=>setFileNo(e.target.value)} className={`w-full px-3 py-2 rounded-md border focus:outline-none focus:ring-2 bg-card text-foreground transition ${errors.fileNo ? 'border-destructive focus:ring-destructive/60' : fileNo ? 'border-primary/60 focus:ring-primary/40' : 'border-border/40 focus:ring-primary/30'}`} placeholder="e.g. 456/GA/2025" />
             {errors.fileNo ? (
-              <div className="mt-1 text-xs text-red-600">{errors.fileNo}</div>
+              <div className="mt-1 text-xs text-destructive">{errors.fileNo}</div>
             ) : fileNo ? (
-              <div className="mt-1 text-xs text-emerald-600">Looks good</div>
+              <div className="mt-1 text-xs text-primary">Looks good</div>
             ) : null}
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Subject (optional)</label>
-            <input value={subject} onChange={(e)=>setSubject(e.target.value)} className="w-full px-3 py-2 rounded-md border border-gray-300" placeholder="Subject" />
+            <label className="block text-sm text-muted-foreground mb-1">Subject (optional)</label>
+            <input value={subject} onChange={(e)=>setSubject(e.target.value)} className="w-full px-3 py-2 rounded-md border border-border/40 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Subject" />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Note (optional)</label>
-            <input value={note} onChange={(e)=>setNote(e.target.value)} className="w-full px-3 py-2 rounded-md border border-gray-300" placeholder="Note" />
+            <label className="block text-sm text-muted-foreground mb-1">Note (optional)</label>
+            <input value={note} onChange={(e)=>setNote(e.target.value)} className="w-full px-3 py-2 rounded-md border border-border/40 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Note" />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">To Office</label>
-            <select value={office} onChange={(e)=>setOffice(e.target.value)} className={`w-full px-3 py-2 rounded-md border bg-white text-gray-900 transition ${errors.office ? 'border-red-500' : office ? 'border-emerald-400' : 'border-gray-300'}`}>
+            <label className="block text-sm text-muted-foreground mb-1">To Office</label>
+            <select value={office} onChange={(e)=>setOffice(e.target.value)} className={`w-full px-3 py-2 rounded-md border bg-card text-foreground transition ${errors.office ? 'border-destructive' : office ? 'border-primary/60' : 'border-border/40'}`}>
               <option value="">Select office…</option>
               {offices.map((o)=> (<option key={o} value={o}>{o}</option>))}
               <option value="__add_new">+ Add new office…</option>
             </select>
             {errors.office ? (
-              <div className="mt-1 text-xs text-red-600">{errors.office}</div>
+              <div className="mt-1 text-xs text-destructive">{errors.office}</div>
             ) : (office && office !== '__add_new') ? (
-              <div className="mt-1 text-xs text-emerald-600">Looks good</div>
+              <div className="mt-1 text-xs text-primary">Looks good</div>
             ) : null}
             {office === '__add_new' && (
               <div className="mt-2 flex gap-2">
-                <input value={newOffice} onChange={(e)=>setNewOffice(e.target.value)} className="flex-1 px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-900" placeholder="New office name" />
-                <button type="button" onClick={addOffice} className="px-3 py-2 rounded-md bg-brand text-white">Add</button>
+                <input value={newOffice} onChange={(e)=>setNewOffice(e.target.value)} className="flex-1 px-3 py-2 rounded-md border border-border/40 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="New office name" />
+                <button type="button" onClick={addOffice} className="px-3 py-2 rounded-md bg-primary text-primary-foreground border border-border shadow-retro hover:bg-primary-hover">Add</button>
               </div>
             )}
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm text-gray-600 mb-1">Upload Document</label>
+            <label className="block text-sm text-muted-foreground mb-1">Upload Document</label>
             <div className="flex items-center gap-3">
-              <label className="inline-flex items-center px-4 py-2 rounded-md border bg-white cursor-pointer hover:bg-gray-50 transition">
+              <label className="inline-flex items-center px-4 py-2 rounded-md border bg-card cursor-pointer hover:bg-primary/15 transition">
                 <input type="file" accept="application/pdf,image/*" onChange={onFileChange} className="hidden" />
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 00-2 2v6a2 2 0 002 2h3l2 2 2-2h3a2 2 0 002-2V5a2 2 0 00-2-2H4z"/></svg>
                 Upload
               </label>
-              <span className={`text-sm ${errors.doc ? 'text-red-600' : 'text-gray-600'}`}>{doc ? `${doc.name} (${Math.round(doc.size/1024)} KB)` : 'No file chosen'}</span>
+              <span className={`text-sm ${errors.doc ? 'text-destructive' : 'text-muted-foreground'}`}>{doc ? `${doc.name} (${Math.round(doc.size/1024)} KB)` : 'No file chosen'}</span>
             </div>
             {errors.doc ? (
-              <div className="mt-1 text-xs text-red-600">{errors.doc}</div>
+              <div className="mt-1 text-xs text-destructive">{errors.doc}</div>
             ) : doc ? (
-              <div className="mt-1 text-xs text-emerald-600">Ready to upload</div>
+              <div className="mt-1 text-xs text-primary">Ready to upload</div>
             ) : null}
           </div>
         </div>
 
         <div className="mt-4 flex items-center gap-3 flex-wrap">
-          <button onClick={save} disabled={saving} className="px-4 py-2 rounded-md bg-brand text-white disabled:opacity-50 transition transform active:scale-95 hover:bg-brand/90">{saving ? 'Saving…' : 'Save'}</button>
-          <button type="button" className="px-3 py-2 rounded-md border" onClick={()=>setManageOpen(true)}>Manage Offices</button>
+          <button onClick={save} disabled={saving} className="px-4 py-2 rounded-md bg-primary text-primary-foreground border border-border shadow-retro disabled:opacity-50 transition transform active:scale-95 hover:bg-primary-hover">{saving ? 'Saving…' : 'Save'}</button>
+          <button type="button" className="px-3 py-2 rounded-md border border-border/40 bg-card hover:bg-primary/15 transition" onClick={()=>setManageOpen(true)}>Manage Offices</button>
           <div className="ml-auto flex items-center gap-2">
-            <input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search…" className="px-3 py-2 rounded-md border border-gray-300"/>
-            <button className="px-3 py-2 rounded-md border" onClick={exportExcel}>Export</button>
+            <input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search…" className="px-3 py-2 rounded-md border border-border/40 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"/>
+            <button className="px-3 py-2 rounded-md border border-border/40 bg-card hover:bg-primary/15 transition" onClick={exportExcel}>Export</button>
           </div>
         </div>
       </div>
 
-      <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-card">
+      <div className="p-4 bg-card rounded-xl border-2 border-border/40 shadow-retro">
         <h2 className="font-semibold">Recent Outward</h2>
         <div className="mt-3 space-y-2 text-sm">
           {filtered?.length ? (
             filtered.slice(0,20).map((it)=>(
-              <div key={it.id} className="flex items-center justify-between border rounded-md p-2">
+              <div key={it.id} className="flex items-center justify-between border border-border/40 rounded-md p-2 bg-card">
                 <div>
-                  <div className="text-gray-800">{it.fileNo}</div>
-                  <div className="text-gray-500">To: {it.toOffice} • {format(new Date(it.date),'dd MMM yyyy')}</div>
+                  <div className="text-foreground">{it.fileNo}</div>
+                  <div className="text-muted-foreground">To: {it.toOffice} • {format(new Date(it.date),'dd MMM yyyy')}</div>
                   {(it.subject || it.note) && (
-                    <div className="text-xs text-gray-500">{it.subject} {it.subject && it.note ? '—' : ''} {it.note}</div>
+                    <div className="text-xs text-muted-foreground">{it.subject} {it.subject && it.note ? '—' : ''} {it.note}</div>
                   )}
                 </div>
                 {it.document?.data && (
-                  <a className="px-3 py-1 rounded border text-xs" href={it.document.data} download={it.document.name}>Download</a>
+                  <a className="px-3 py-1 rounded border border-border/40 text-xs bg-card hover:bg-primary/15 transition" href={it.document.data} download={it.document.name}>Download</a>
                 )}
               </div>
             ))
           ) : (
-            <div className="text-gray-500">No records yet</div>
+            <div className="text-muted-foreground">No records yet</div>
           )}
         </div>
       </div>
 
-      {toast && (<div className="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 bg-emerald-600 text-white px-4 py-2 rounded-full shadow animate-slide-up">{toast}</div>)}
+      {toast && (<div className="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 bg-primary text-primary-foreground border border-border shadow-retro px-4 py-2 rounded-full shadow animate-slide-up">{toast}</div>)}
       <OfficesManager open={manageOpen} onClose={()=>setManageOpen(false)} offices={offices} setOffices={(list)=>{ setOffices(list); saveToLocalStorage(LOCAL_STORAGE_KEYS.OFFICES, list); }} />
     </div>
   );

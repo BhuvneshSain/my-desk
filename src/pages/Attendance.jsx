@@ -160,72 +160,56 @@ export default function AttendancePage() {
     return rows;
   }, [viewMonth]);
 
-  const typeColorMap = {
-    present: 'bg-emerald-500',
-    official_leave: 'bg-red-500',
-    official_travel: 'bg-blue-500',
-    on_duty_leave: 'bg-sky-500',
-    casual_leave: 'bg-amber-500',
-    medical_leave: 'bg-rose-500',
-    privilege_leave: 'bg-indigo-500',
-    unpaid_leave: 'bg-gray-500',
+  const STATUS_THEME = {
+    present: { dot: 'bg-primary', badge: 'bg-primary/25 text-foreground border border-border/30', button: 'bg-secondary border border-border/30 text-secondary-foreground shadow-retro' },
+    official_travel: { dot: 'bg-accent', badge: 'bg-accent/20 text-foreground border border-border/30', button: 'bg-accent border border-border/30 text-foreground shadow-retro' },
+    official_leave: { dot: 'bg-destructive', badge: 'bg-destructive/20 text-destructive-foreground border border-destructive/40', button: 'bg-destructive border border-destructive/50 text-destructive-foreground shadow-retro' },
+    on_duty_leave: { dot: 'bg-secondary', badge: 'bg-secondary/20 text-secondary-foreground border border-secondary/40', button: 'bg-secondary border border-secondary/40 text-secondary-foreground shadow-retro' },
+    casual_leave: { dot: 'bg-primary/80', badge: 'bg-primary/20 text-foreground border border-border/30', button: 'bg-primary/80 border border-border/30 text-foreground shadow-retro' },
+    medical_leave: { dot: 'bg-destructive/70', badge: 'bg-destructive/15 text-destructive-foreground border border-destructive/30', button: 'bg-destructive/70 border border-destructive/60 text-destructive-foreground shadow-retro' },
+    privilege_leave: { dot: 'bg-secondary/80', badge: 'bg-secondary/15 text-secondary-foreground border border-secondary/40', button: 'bg-secondary/80 border border-secondary/60 text-secondary-foreground shadow-retro' },
+    unpaid_leave: { dot: 'bg-muted', badge: 'bg-muted/40 text-muted-foreground border border-border/40', button: 'bg-muted border border-border/40 text-foreground shadow-retro' },
   };
 
-  const typeBadge = (k) => `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-    k === 'present' ? 'bg-emerald-100 text-emerald-700' :
-    k === 'official_leave' ? 'bg-red-100 text-red-700' :
-    k === 'official_travel' ? 'bg-blue-100 text-blue-700' :
-    k === 'casual_leave' ? 'bg-amber-100 text-amber-700' :
-    k === 'medical_leave' ? 'bg-rose-100 text-rose-700' :
-    k === 'privilege_leave' ? 'bg-indigo-100 text-indigo-700' :
-    'bg-gray-100 text-gray-700'
-  }`;
+  const typeColorMap = Object.fromEntries(Object.entries(STATUS_THEME).map(([k, v]) => [k, v.dot]));
+  const typeBadge = (k) => `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_THEME[k]?.badge || 'bg-muted/30 text-muted-foreground border border-border/40'}`;
 
   const currentRecord = attendanceRecords[dateKey];
-  const typeBtnActive = {
-    present: 'bg-emerald-600 border-emerald-600 text-white',
-    official_travel: 'bg-blue-600 border-blue-600 text-white',
-    official_leave: 'bg-red-600 border-red-600 text-white',
-    on_duty_leave: 'bg-sky-600 border-sky-600 text-white',
-    casual_leave: 'bg-amber-600 border-amber-600 text-white',
-    medical_leave: 'bg-rose-600 border-rose-600 text-white',
-    privilege_leave: 'bg-indigo-600 border-indigo-600 text-white',
-    unpaid_leave: 'bg-gray-600 border-gray-600 text-white',
-  };
+  const typeBtnActive = Object.fromEntries(Object.entries(STATUS_THEME).map(([k, v]) => [k, v.button]));
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl p-6 bg-gradient-to-r from-brand to-blue-500 text-white shadow-card">
+      <div className="rounded-xl p-6 border border-border/20 bg-secondary text-secondary-foreground shadow-retro">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">Attendance</h1>
-            <p className="text-white/90">Track and manage your daily attendance records</p>
+            <p className="text-secondary-foreground/90">Track and manage your daily attendance records</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full border border-white/40 bg-white/10 text-sm">{format(selectedDate, 'EEE, dd MMM yyyy')}</span>
-            {type && <span className="px-3 py-1 rounded-full bg-white/20 text-sm">{TYPES.find(t=>t.key===type)?.label}</span>}
+            <span className="px-3 py-1 rounded-full border border-border/40 bg-primary/15 text-sm">{format(selectedDate, 'EEE, dd MMM yyyy')}</span>
+            {type && <span className="px-3 py-1 rounded-full bg-primary/20 text-sm">{TYPES.find(t=>t.key===type)?.label}</span>}
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-card dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
+        <div className="bg-card rounded-xl border border-border/20 p-4 shadow-retro text-foreground">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1">
-              <button aria-label="Previous month" className="px-2 py-1 rounded hover:bg-gray-100 disabled:opacity-40" onClick={() => canPrev && setViewMonth(subMonths(viewMonth, 1))} disabled={!canPrev}>&larr;</button>
+              <button aria-label="Previous month" className="px-2 py-1 rounded border border-border/20 bg-card hover:bg-muted/15 transition disabled:opacity-40" onClick={() => canPrev && setViewMonth(subMonths(viewMonth, 1))} disabled={!canPrev}>&larr;</button>
               <h2 className="font-semibold">{format(viewMonth, 'MMMM yyyy')}</h2>
-              <button aria-label="Next month" className="px-2 py-1 rounded hover:bg-gray-100 disabled:opacity-40" onClick={() => canNext && setViewMonth(addMonths(viewMonth, 1))} disabled={!canNext}>&rarr;</button>
+              <button aria-label="Next month" className="px-2 py-1 rounded border border-border/20 bg-card hover:bg-muted/15 transition disabled:opacity-40" onClick={() => canNext && setViewMonth(addMonths(viewMonth, 1))} disabled={!canNext}>&rarr;</button>
             </div>
-            <button className="px-2 py-1 text-sm rounded border hover:bg-gray-50" onClick={() => { setViewMonth(startOfMonth(today)); setSelectedDate(today); }}>Today</button>
+            <button className="px-2 py-1 text-sm rounded border border-border/30 bg-card hover:bg-primary/15 transition" onClick={() => { setViewMonth(startOfMonth(today)); setSelectedDate(today); }}>Today</button>
           </div>
-          <div className="mt-3 grid grid-cols-7 text-center text-xs text-gray-500">
+          <div className="mt-3 grid grid-cols-7 text-center text-xs text-muted-foreground">
             {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d) => (<div key={d} className="py-1">{d}</div>))}
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-600">
-            <span className="inline-flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-emerald-500"/> Present</span>
-            <span className="inline-flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-red-500"/> Official Leave</span>
-            <span className="inline-flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-amber-500"/> Casual Leave</span>
-            <span className="inline-flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-blue-500"/> Official Travel</span>
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-primary"/> Present</span>
+            <span className="inline-flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-destructive"/> Official Leave</span>
+            <span className="inline-flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-primary/80"/> Casual Leave</span>
+            <span className="inline-flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-accent"/> Official Travel</span>
           </div>
           <div className="mt-1 space-y-1">
             {daysMatrix.map((week, wi) => (
@@ -243,7 +227,7 @@ export default function AttendancePage() {
                     <button
                       key={`${wi}-${di}-${key}`}
                       onClick={() => !disabled && setSelectedDate(day)}
-                      className={`relative w-full h-10 md:h-12 rounded border border-gray-200 text-sm flex items-center justify-center select-none transition ${disabled ? 'text-red-500/80' : 'hover:bg-gray-100'} ${outMonth ? 'text-gray-300' : 'text-gray-800'} ${isSel ? 'ring-2 ring-brand bg-indigo-50' : ''} ${isToday ? 'after:content-[""] after:absolute after:top-1 after:right-1 after:w-1.5 after:h-1.5 after:rounded-full after:bg-brand' : ''}`}
+                      className={`relative w-full h-10 md:h-12 rounded border border-border/30 text-sm flex items-center justify-center select-none transition ${disabled ? 'text-muted-foreground/50' : 'hover:bg-muted/20'} ${outMonth ? 'text-muted-foreground/60' : 'text-foreground'} ${isSel ? 'ring-2 ring-primary bg-primary/15' : ''} ${isToday ? 'after:content-[""] after:absolute after:top-1 after:right-1 after:w-1.5 after:h-1.5 after:rounded-full after:bg-primary' : ''}`}
                       disabled={disabled}
                       title={key}
                     >
@@ -259,18 +243,18 @@ export default function AttendancePage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-card dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
+        <div className="bg-card rounded-xl border border-border/20 p-4 shadow-retro text-foreground">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="font-semibold">Monthly Overview</h2>
-              <p className="text-xs text-gray-500">{format(viewMonth, 'MMMM yyyy')}</p>
+              <p className="text-xs text-muted-foreground">{format(viewMonth, 'MMMM yyyy')}</p>
             </div>
-            <button onClick={exportToExcel} className="px-3 py-1.5 text-sm rounded border hover:bg-gray-50">Export</button>
+            <button onClick={exportToExcel} className="px-3 py-1.5 text-sm rounded border border-border/30 bg-card hover:bg-primary/15 transition">Export</button>
           </div>
           <div className="overflow-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="text-gray-600 border-b">
+                <tr className="text-muted-foreground border-b">
                   <th className="py-2">Date</th>
                   <th className="py-2">Status</th>
                   <th className="py-2">Note</th>
@@ -278,7 +262,7 @@ export default function AttendancePage() {
               </thead>
               <tbody>
                 {getMonthRecords().map(([date, record]) => (
-                  <tr key={date} className={`hover:bg-gray-50 cursor-pointer ${date === dateKey ? 'bg-indigo-50' : ''}`} onClick={() => setSelectedDate(new Date(date))}>
+                  <tr key={date} className={`hover:bg-primary/15 cursor-pointer ${date === dateKey ? 'bg-primary/15' : ''}`} onClick={() => setSelectedDate(new Date(date))}>
                     <td className="py-2 align-top">{format(new Date(date), 'dd MMM, yyyy')}</td>
                     <td className="py-2 align-top"><span className={typeBadge(record.type)}>{TYPES.find(t=>t.key===record.type)?.label || record.type}</span></td>
                     <td className="py-2 align-top">{record.reason || '-'}</td>
@@ -287,27 +271,27 @@ export default function AttendancePage() {
               </tbody>
             </table>
           </div>
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-            <div className="text-sm text-gray-600 mb-2">Monthly Summary</div>
+          <div className="mt-4 p-3 bg-muted/20 rounded-lg">
+            <div className="text-sm text-muted-foreground mb-2">Monthly Summary</div>
             <div className="flex flex-wrap gap-2">
               {TYPES.map((t) => (
-                <span key={t.key} className="px-2 py-1 rounded border text-xs bg-white">{t.label}: {monthSummary[t.key] || 0}</span>
+                <span key={t.key} className="px-2 py-1 rounded border border-border/20 text-xs bg-card text-muted-foreground">{t.label}: {monthSummary[t.key] || 0}</span>
               ))}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-card dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
+      <div className="bg-card rounded-xl border border-border/20 p-4 shadow-retro text-foreground">
         <div className="mb-3">
           <h2 className="text-lg font-semibold">Mark Attendance</h2>
-          <p className="text-sm text-gray-500">Select your status for {format(selectedDate, 'EEEE, MMMM d, yyyy')}</p>
+          <p className="text-sm text-muted-foreground">Select your status for {format(selectedDate, 'EEEE, MMMM d, yyyy')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {TYPES.map((t) => {
             const active = type === t.key;
-            const base = 'px-3 py-2 rounded-md border text-sm transition';
-            const color = active ? (typeBtnActive[t.key] || 'bg-indigo-600 border-indigo-600 text-white') : 'bg-white border-gray-300 hover:bg-gray-50';
+            const base = 'px-3 py-2 rounded-md border text-sm transition-colors';
+            const color = active ? (typeBtnActive[t.key] || 'bg-secondary border border-border text-secondary-foreground shadow-retro') : 'bg-muted/15 border border-border/30 text-muted-foreground hover:bg-primary/15 hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/30';
             return (
               <button key={t.key} className={`${base} ${color}`} onClick={() => setType(t.key)} disabled={weekendSelected || futureSelected}>{t.label}</button>
             );
@@ -315,18 +299,18 @@ export default function AttendancePage() {
         </div>
         {showReason && (
           <div className="mt-4">
-            <label className="block text-sm text-gray-600 mb-1">Reason</label>
-            <input type="text" className="w-full px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Provide a brief reason" value={reason} onChange={(e) => setReason(e.target.value)} disabled={weekendSelected || futureSelected} />
+            <label className="block text-sm text-muted-foreground mb-1">Reason</label>
+            <input type="text" className="w-full px-3 py-2 rounded-md border border-border/40 bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40" placeholder="Provide a brief reason" value={reason} onChange={(e) => setReason(e.target.value)} disabled={weekendSelected || futureSelected} />
           </div>
         )}
-        <div className="mt-4 flex items-center gap-2">
-          <button onClick={saveRecord} disabled={weekendSelected || futureSelected} className="px-4 py-2 rounded-md bg-brand text-white hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed">Save</button>
+        <div className="mt-6 border-t border-border/20 pt-4 flex items-center gap-2">
+          <button onClick={saveRecord} disabled={weekendSelected || futureSelected} className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed">Save</button>
           {currentRecord && (<span className={`${typeBadge(currentRecord.type)} text-xs`}>{TYPES.find(t=>t.key===currentRecord.type)?.label || currentRecord.type}</span>)}
-          {currentRecord?.reason && (<span className="text-sm text-gray-500">Reason: {currentRecord.reason}</span>)}
+          {currentRecord?.reason && (<span className="text-sm text-muted-foreground">Reason: {currentRecord.reason}</span>)}
         </div>
       </div>
 
-      {toastMsg && (<div className="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 bg-emerald-600 text-white px-4 py-2 rounded-full shadow">{toastMsg}</div>)}
+      {toastMsg && (<div className="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-retro">{toastMsg}</div>)}
     </div>
   );
 }

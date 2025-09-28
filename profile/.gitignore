@@ -1,0 +1,12 @@
+*.bak
+*.tmp
+*.lock
+*.log
+profile.json
+attendance.json
+tasks.json
+offices.json
+inward/*
+!inward/.gitkeep
+outward/*
+!outward/.gitkeep
