@@ -1,5 +1,12 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+import { getStoredToken } from './auth';
+
+const rawBase = (import.meta.env.VITE_API_BASE ?? '').trim();
+const API_BASE = rawBase ? rawBase.replace(/\/$/, '') : '';
 const PROVIDER = (import.meta.env.VITE_DATA_PROVIDER || 'server').toLowerCase(); // 'server' | 'firebase'
+const DEFAULT_HEADERS = {
+  'Content-Type': 'application/json',
+  'Cache-Control': 'no-cache',
+};
 
 function emit(name, detail){ try{ if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(name,{ detail })); }catch{} }
 
@@ -12,11 +19,17 @@ async function request(path, options = {}) {
       const ts = Date.now();
       urlPath = path + (path.includes('?') ? '&' : '?') + `_ts=${ts}`;
     }
+    const token = getStoredToken();
+    const headers = { ...DEFAULT_HEADERS, ...(options.headers || {}) };
+    if (token && !headers.Authorization) {
+      headers.Authorization = `Bearer ${token}`;
+    }
     const res = await fetch(`${API_BASE}${urlPath}`, {
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache', ...(options.headers || {}) },
+      method,
       cache: 'no-store',
       credentials: 'include',
       ...options,
+      headers,
     });
     if (!res.ok) {
       let msg = `HTTP ${res.status}`;
@@ -28,7 +41,6 @@ async function request(path, options = {}) {
     emit('mydesk-net', { delta: -1 });
   }
 }
-
 export const api = {
   base: API_BASE,
   provider: PROVIDER,
@@ -55,155 +67,22 @@ export const api = {
   getOffices: () => request('/api/offices'),
   saveOffices: (arr) => request('/api/offices', { method: 'PUT', body: JSON.stringify(arr) }),
   // auth
-  login: (username, password) => request('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
+  signup: (payload) => request('/api/auth/signup', { method: 'POST', body: JSON.stringify(payload) }),
+  login: (email, password) => request('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   logout: () => request('/api/auth/logout', { method: 'POST' }),
-  me: () => request('/api/me'),
+  me: () => request('/api/auth/me'),
+  // employees
+  getEmployees: () => request('/api/employees'),
+  getEmployee: (id) => request(`/api/employees/${id}`),
+  createEmployee: (payload) => request('/api/employees', { method: 'POST', body: JSON.stringify(payload) }),
+  updateEmployee: (id, payload) => request(`/api/employees/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteEmployee: (id) => request(`/api/employees/${id}`, { method: 'DELETE' }),
 };
 
-// --- Firebase provider implementation (optional) ---
-// Only loaded if VITE_DATA_PROVIDER=firebase
-async function fbImpl() {
-  const { getFb } = await import('./firebase');
-  const { auth, db, storage } = getFb();
-  const { signInWithEmailAndPassword, signOut, onAuthStateChanged } = await import('firebase/auth');
-  const { collection, doc, getDocs, getDoc, setDoc, addDoc, updateDoc, deleteDoc } = await import('firebase/firestore');
-  const { ref, uploadString, getDownloadURL } = await import('firebase/storage');
-
-  const inwardCol = collection(db, 'inward');
-  const outwardCol = collection(db, 'outward');
-  const tasksCol = collection(db, 'tasks');
-  const settingsDoc = doc(db, 'settings', 'globals');
-  const attendanceDoc = doc(db, 'attendance', 'records');
-  const profileDoc = doc(db, 'profiles', 'default');
-
-  async function uploadDataUrl(dataUrl, destPath) {
-    const r = ref(storage, destPath);
-    await uploadString(r, dataUrl, 'data_url');
-    const url = await getDownloadURL(r);
-    return url;
-  }
-
-  const toList = (snap) => snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-  return {
-    base: 'firebase',
-    provider: 'firebase',
-    // inward
-    async getInward() { const snap = await getDocs(inwardCol); return toList(snap).sort((a,b)=>new Date(b.date)-new Date(a.date)); },
-    async addInward(payload) {
-      const name = payload?.document?.name || `file_${Date.now()}`;
-      const path = `inward/${Date.now()}_${name}`;
-      const url = await uploadDataUrl(payload.document.data, path);
-      const docData = {
-        date: new Date().toISOString(),
-        fileNo: String(payload.fileNo).trim(),
-        fromOffice: String(payload.fromOffice).trim(),
-        subject: payload.subject || '',
-        note: payload.note || '',
-        document: { name, type: payload.document.type || '', size: payload.document.size || 0 },
-        fileUrl: url,
-      };
-      // Duplicate check
-      const existing = await getDocs(inwardCol);
-      if (toList(existing).some(it => (it.fileNo||'').toLowerCase() === docData.fileNo.toLowerCase())) throw new Error('Duplicate file number');
-      const created = await addDoc(inwardCol, docData);
-      return { id: created.id, ...docData };
-    },
-    async updateInward(id, patch) {
-      const d = doc(db, 'inward', id);
-      const cur = (await getDoc(d)).data();
-      if (!cur) throw new Error('Not found');
-      let updates = { ...patch };
-      if (patch.document?.data && patch.document?.name) {
-        const name = patch.document.name;
-        const path = `inward/${Date.now()}_${name}`;
-        const url = await uploadDataUrl(patch.document.data, path);
-        updates.document = { name, type: patch.document.type || '', size: patch.document.size || 0 };
-        updates.fileUrl = url;
-      }
-      await updateDoc(d, updates);
-      return { id, ...cur, ...updates };
-    },
-    async deleteInward(id) { await deleteDoc(doc(db, 'inward', id)); return { ok: true }; },
-    // outward
-    async getOutward() { const snap = await getDocs(outwardCol); return toList(snap).sort((a,b)=>new Date(b.date)-new Date(a.date)); },
-    async addOutward(payload) {
-      const name = payload?.document?.name || `file_${Date.now()}`;
-      const path = `outward/${Date.now()}_${name}`;
-      const url = await uploadDataUrl(payload.document.data, path);
-      const docData = {
-        date: new Date().toISOString(),
-        fileNo: String(payload.fileNo).trim(),
-        toOffice: String(payload.toOffice).trim(),
-        subject: payload.subject || '',
-        note: payload.note || '',
-        document: { name, type: payload.document.type || '', size: payload.document.size || 0 },
-        fileUrl: url,
-      };
-      const existing = await getDocs(outwardCol);
-      if (toList(existing).some(it => (it.fileNo||'').toLowerCase() === docData.fileNo.toLowerCase())) throw new Error('Duplicate file number');
-      const created = await addDoc(outwardCol, docData);
-      return { id: created.id, ...docData };
-    },
-    async updateOutward(id, patch) {
-      const d = doc(db, 'outward', id);
-      const cur = (await getDoc(d)).data();
-      if (!cur) throw new Error('Not found');
-      let updates = { ...patch };
-      if (patch.document?.data && patch.document?.name) {
-        const name = patch.document.name;
-        const path = `outward/${Date.now()}_${name}`;
-        const url = await uploadDataUrl(patch.document.data, path);
-        updates.document = { name, type: patch.document.type || '', size: patch.document.size || 0 };
-        updates.fileUrl = url;
-      }
-      await updateDoc(d, updates);
-      return { id, ...cur, ...updates };
-    },
-    async deleteOutward(id) { await deleteDoc(doc(db, 'outward', id)); return { ok: true }; },
-    // attendance
-    async getAttendance() { const s = await getDoc(attendanceDoc); return s.exists() ? (s.data()||{}) : {}; },
-    async upsertAttendance(date, record) {
-      const s = await getDoc(attendanceDoc);
-      const cur = s.exists() ? (s.data() || {}) : {};
-      const next = { ...cur, [date]: record };
-      await setDoc(attendanceDoc, next);
-      return next;
-    },
-    // tasks
-    async getTasks() { const snap = await getDocs(tasksCol); return toList(snap); },
-    async addTask(task) { const created = await addDoc(tasksCol, { ...task, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }); return { id: created.id, ...task }; },
-    async updateTask(id, patch) { await updateDoc(doc(db, 'tasks', id), { ...patch, updatedAt: new Date().toISOString() }); const s = await getDoc(doc(db,'tasks',id)); return { id, ...(s.data()||{}) }; },
-    async deleteTask(id) { await deleteDoc(doc(db,'tasks',id)); return { ok:true }; },
-    // profile
-    async getProfile() { const s = await getDoc(profileDoc); return s.exists() ? (s.data()||{}) : {}; },
-    async saveProfile(obj) { await setDoc(profileDoc, obj); return obj; },
-    // offices
-    async getOffices() { const s = await getDoc(settingsDoc); return s.exists() ? (s.data()?.offices || []) : []; },
-    async saveOffices(arr) { await setDoc(settingsDoc, { offices: arr }, { merge: true }); return arr; },
-    // auth
-    async login(username, password) { const res = await signInWithEmailAndPassword(auth, username, password); return { user: { id: res.user.uid, username: res.user.email || '', role: 'user' } }; },
-    async logout() { await signOut(auth); return { ok: true }; },
-    async me() { return new Promise((resolve, reject) => { const unsub = onAuthStateChanged(auth, (u)=>{ unsub(); if (u) resolve({ id: u.uid, username: u.email || '', role: 'user' }); else reject(new Error('Unauthorized')); }); }); },
-  };
-}
-
-let exported = api;
 if (PROVIDER === 'firebase') {
-  // Wrap lazily; expose same API surface
-  const proxy = new Proxy({}, {
-    get(_t, prop) {
-      if (prop === 'provider') return 'firebase';
-      if (prop === 'base') return 'firebase';
-      return async (...args) => {
-        const impl = await fbImpl();
-        const fn = impl[prop];
-        if (typeof fn !== 'function') throw new Error(`API method not available: ${String(prop)}`);
-        return fn(...args);
-      };
-    }
-  });
-  exported = proxy;
+  throw new Error('Firebase provider is not available in this build.');
 }
 
-export default exported;
+export default api;
+
+

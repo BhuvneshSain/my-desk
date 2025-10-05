@@ -1,13 +1,18 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import Layout from './components/Layout';
+import RequireAuth from './components/RequireAuth.jsx';
+import PublicOnly from './components/PublicOnly.jsx';
+import LoginPage from './pages/Login.jsx';
+import SignupPage from './pages/Signup.jsx';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const AttendancePage = lazy(() => import('./pages/Attendance'));
+const Tasks = lazy(() => import('./pages/Tasks'));
+const EmployeesPage = lazy(() => import('./pages/Employees'));
 const InwardRegister = lazy(() => import('./pages/InwardRegister'));
 const OutwardRegister = lazy(() => import('./pages/OutwardRegister'));
 const Profile = lazy(() => import('./pages/Profile'));
-const Tasks = lazy(() => import('./pages/Tasks'));
 
 function ComingSoon({ title }) {
   return (
@@ -22,6 +27,7 @@ const primaryRoutes = [
   { index: true, element: <Dashboard /> },
   { path: 'attendance', element: <AttendancePage /> },
   { path: 'tasks', element: <Tasks /> },
+  { path: 'employees', element: <EmployeesPage /> },
   { path: 'inward', element: <InwardRegister /> },
   { path: 'outward', element: <OutwardRegister /> },
   { path: 'profile', element: <Profile /> },
@@ -51,10 +57,19 @@ function App() {
     <BrowserRouter>
       <Suspense fallback={<div className="p-6 text-muted-foreground">Loading…</div>}>
         <Routes>
-          <Route path="/" element={<Layout />}>
-            {renderRoutes(primaryRoutes)}
-            {renderRoutes(placeholderRoutes)}
+          <Route element={<PublicOnly />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
           </Route>
+
+          <Route element={<RequireAuth />}>
+            <Route path="/" element={<Layout />}>
+              {renderRoutes(primaryRoutes)}
+              {renderRoutes(placeholderRoutes)}
+            </Route>
+          </Route>
+
+          <Route path="*" element={<ComingSoon title="Not Found" />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
@@ -62,3 +77,4 @@ function App() {
 }
 
 export default App;
+

@@ -1,0 +1,116 @@
+// Prisma schema for My-Desk backend
+// https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EmployeeRole {
+  ADMIN
+  INCHARGE
+  STAFF
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum DocumentType {
+  INWARD
+  OUTWARD
+}
+
+model Employee {
+  id               String            @id @default(uuid())
+  email            String            @unique
+  password         String
+  fullName         String            @map("full_name")
+  role             EmployeeRole      @default(STAFF)
+  workInchargeId   String?           @map("work_incharge_id")
+  workIncharge     Employee?         @relation("EmployeeIncharge", fields: [workInchargeId], references: [id])
+  teamMembers      Employee[]        @relation("EmployeeIncharge")
+
+  tasksCreated     Task[]            @relation("TaskCreatedBy")
+  assignments      TaskAssignment[]
+  attendances      Attendance[]
+  documentsCreated Document[]        @relation("DocumentCreatedBy")
+
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+}
+
+model Attendance {
+  id           String    @id @default(uuid())
+  employeeId   String    @map("employee_id")
+  employee     Employee  @relation(fields: [employeeId], references: [id])
+  workDate     DateTime  @map("work_date") @db.Date
+  checkInTime  DateTime? @map("check_in_time")
+  checkOutTime DateTime? @map("check_out_time")
+
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@unique([employeeId, workDate], name: "attendance_employee_date_unique")
+}
+
+model Task {
+  id           String          @id @default(uuid())
+  title        String
+  description  String?
+  status       TaskStatus      @default(TODO)
+  priority     TaskPriority    @default(MEDIUM)
+  dueDate      DateTime        @map("due_date")
+  createdById  String          @map("created_by_id")
+  createdBy    Employee        @relation("TaskCreatedBy", fields: [createdById], references: [id])
+
+  assignments  TaskAssignment[]
+  relatedDocs  Document[]      @relation("DocumentLinkedTask")
+
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+}
+
+model TaskAssignment {
+  id          String    @id @default(uuid())
+  taskId      String    @map("task_id")
+  employeeId  String    @map("employee_id")
+  task        Task      @relation(fields: [taskId], references: [id])
+  employee    Employee  @relation(fields: [employeeId], references: [id])
+  assignedAt  DateTime  @default(now()) @map("assigned_at")
+
+  @@unique([taskId, employeeId], name: "task_assignment_unique")
+}
+
+model Document {
+  id              String        @id @default(uuid())
+  type            DocumentType
+  referenceNumber String        @unique @map("reference_number")
+  subject         String
+  senderReceiver  String        @map("sender_receiver")
+  description     String?
+
+  relatedTaskId   String?       @map("related_task_id")
+  relatedTask     Task?         @relation("DocumentLinkedTask", fields: [relatedTaskId], references: [id])
+
+  createdById     String?       @map("created_by_id")
+  createdBy       Employee?     @relation("DocumentCreatedBy", fields: [createdById], references: [id])
+
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+}
